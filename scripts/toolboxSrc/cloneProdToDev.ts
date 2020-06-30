@@ -1,4 +1,4 @@
-import getRethink from './rethinkDriver'
+import getRethink from '../../packages/server/database/rethinkDriver'
 
 export default async function cloneProdToDev() {
   const r = await getRethink()
@@ -19,10 +19,13 @@ export default async function cloneProdToDev() {
       .config()
       .update({
         db: 'actionDevelopment'
-      })
+      } as any)
       .run()
   )
   await Promise.all(promises)
   console.log('Move to actionDevelopment complete!')
   r.getPoolMaster().drain()
 }
+
+console.log('cloning')
+cloneProdToDev()
