@@ -374,10 +374,12 @@ const updateHubspot = async (
 
 async function onTrack(payload: Payload, settings: Settings) {
   const {event, userId, properties} = payload
+  console.log('onTrack -> payload', payload)
   const {hubspotKey} = settings
   const query = queries[event]
   if (event === 'Meeting Completed') {
     const {userIds} = properties
+    console.log('onTrack -> userIds', userIds)
     // only the facilitator has userIds
     if (!userIds) return
     const parabolPayload = await parabolFetch(query, {userIds, userId}, payload, settings)

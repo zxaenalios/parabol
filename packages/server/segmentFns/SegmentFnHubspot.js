@@ -1,26 +1,6 @@
 const crypto = require('crypto')
 const fetch = require('node-fetch')
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 const contactKeys = {
   lastMetAt: 'last_met_at',
   isAnyBillingLeader: 'is_any_billing_leader',
@@ -217,12 +197,7 @@ query ArchiveTeam($userId: ID!) {
 
 const tierChanges = ['Upgrade to Pro', 'Enterprise invoice drafted', 'Downgrade to personal']
 
-const parabolFetch = async (
-  query,
-  variables,
-  payload,
-  settings
-) => {
+const parabolFetch = async (query, variables, payload, settings) => {
   const {parabolToken, originalTimestamp} = payload
   const {segmentFnKey, parabolEndpoint} = settings
   const ts = Math.floor(new Date(originalTimestamp).getTime() / 1000)
@@ -243,6 +218,7 @@ const parabolFetch = async (
       variables
     })
   })
+  console.log('parabolFetch -> res', res)
   if (!String(res.status).startsWith('2')) {
     console.log({query, variables: JSON.stringify(variables)})
     throw new Error(`ParabolFetch: ${res.status}`)
@@ -262,11 +238,7 @@ const normalize = (value) => {
   return value
 }
 
-const upsertHubspotContact = async (
-  email,
-  hapiKey,
-  propertiesObj
-) => {
+const upsertHubspotContact = async (email, hapiKey, propertiesObj) => {
   if (!propertiesObj || Object.keys(propertiesObj).length === 0) return
   const res = await fetch(
     `https://api.hubapi.com/contacts/v1/contact/createOrUpdate/email/${email}/?hapikey=${hapiKey}`,
@@ -314,11 +286,7 @@ const updateHubspotBulkContact = async (records, hapiKey) => {
   }
 }
 
-const updateHubspotCompany = async (
-  email,
-  hapiKey,
-  propertiesObj
-) => {
+const updateHubspotCompany = async (email, hapiKey, propertiesObj) => {
   if (!propertiesObj || Object.keys(propertiesObj).length === 0) return
   const url = `https://api.hubapi.com/contacts/v1/contact/email/${email}/profile?hapikey=${hapiKey}&property=associatedcompanyid&property_mode=value_only&formSubmissionMode=none&showListMemberships=false`
   const contactRes = await fetch(url)
@@ -354,12 +322,7 @@ const updateHubspotCompany = async (
   }
 }
 
-const updateHubspot = async (
-  query,
-  userId,
-  payload,
-  settings
-) => {
+const updateHubspot = async (query, userId, payload, settings) => {
   if (!query) return
   const parabolPayload = await parabolFetch(query, {userId}, payload, settings)
   if (!parabolPayload) return
