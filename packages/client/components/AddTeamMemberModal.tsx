@@ -199,6 +199,7 @@ const AddTeamMemberModal = (props: Props) => {
     )
   }
 
+  console.log('successfulInvitations', successfulInvitations)
   if (successfulInvitations) {
     return (
       <AddTeamMemberModalSuccess
