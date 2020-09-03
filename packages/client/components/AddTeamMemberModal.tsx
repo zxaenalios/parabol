@@ -5,9 +5,7 @@ import useAtmosphere from '~/hooks/useAtmosphere'
 import useMutationProps from '~/hooks/useMutationProps'
 import {PALETTE} from '~/styles/paletteV2'
 import {ICON_SIZE} from '~/styles/typographyV2'
-
 import styled from '@emotion/styled'
-
 import {AddTeamMemberModal_teamMembers} from '../__generated__/AddTeamMemberModal_teamMembers.graphql'
 import useBreakpoint from '../hooks/useBreakpoint'
 import InviteToTeamMutation from '../mutations/InviteToTeamMutation'
@@ -199,7 +197,6 @@ const AddTeamMemberModal = (props: Props) => {
     )
   }
 
-  console.log('successfulInvitations', successfulInvitations)
   if (successfulInvitations) {
     return (
       <AddTeamMemberModalSuccess

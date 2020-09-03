@@ -157,13 +157,11 @@ export default {
       )
 
       const successfulInvitees = newInvitees.filter((_email, idx) => emailResults[idx])
-      console.log('successfulInvitees', successfulInvitees)
       const data = {
         removedSuggestedActionId,
         teamId,
         invitees: successfulInvitees
       }
-      console.log('data', data)
 
       // Tell each invitee
       notificationsToInsert.forEach((notification) => {
@@ -172,7 +170,6 @@ export default {
           ...data,
           teamInvitationNotificationId
         }
-        console.log('notificationsToInsert', notificationsToInsert)
         publish(
           SubscriptionChannel.NOTIFICATION,
           userId,

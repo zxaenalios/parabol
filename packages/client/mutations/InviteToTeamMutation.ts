@@ -108,11 +108,9 @@ const InviteToTeamMutation = (
       const payload = store.getRootField('inviteToTeam')
       if (!payload) return
       const removedSuggestedActionId = payload.getValue('removedSuggestedActionId')
-      console.log('removedSuggestedActionId', removedSuggestedActionId)
       handleRemoveSuggestedActions(removedSuggestedActionId, store)
     },
     onCompleted: (res, errors) => {
-      console.log('res, errors', res, errors)
       if (onCompleted) {
         onCompleted(res, errors)
       }
