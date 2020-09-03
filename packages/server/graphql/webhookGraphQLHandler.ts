@@ -19,27 +19,21 @@ const webhookGraphQLHandler = uWSAsyncHandler(async (res: HttpResponse, req: Htt
     .getHeader('authorization')
     .slice(7)
     .split('.')
-  console.log('webhookGraphQLHandler -> req', req)
   const timestamp = parseInt(timestampStr, 10)
-  console.log('webhookGraphQLHandler -> timestamp', timestamp)
   // check out
   if (!timestamp || !signature) {
-    console.log('bad timestamp or sig', timestampStr, signature)
     res.writeStatus('401').end()
     return
   }
 
   // check content-type
   const contentType = req.getHeader('content-type')
-  console.log('webhookGraphQLHandler -> contentType', contentType)
   if (!contentType.startsWith('application/json')) {
-    console.log('bad contentType')
     res.writeStatus('415').end()
     return
   }
 
   // verify timestamp
-  console.log('BEFORE SEGMENT')
   const segmentSig = crypto
     .createHmac('sha256', SEGMENT_FN_KEY!)
     .update(
@@ -50,9 +44,7 @@ const webhookGraphQLHandler = uWSAsyncHandler(async (res: HttpResponse, req: Htt
     )
     .digest('base64')
 
-  console.log('AFTER webhookGraphQLHandler -> segmentSig', segmentSig)
   if (segmentSig !== signature) {
-    console.log('bad sig')
     res.writeStatus('401').end()
     return
   }
@@ -60,14 +52,12 @@ const webhookGraphQLHandler = uWSAsyncHandler(async (res: HttpResponse, req: Htt
   // verify expiration
   const expiration = toEpochSeconds(new Date(Date.now() + TOKEN_LIFE))
   if (expiration < timestamp) {
-    console.log('expired')
     res.writeStatus('401').end()
     return
   }
 
   // verify body
   const body = await parseBody(res)
-  console.log('webhookGraphQLHandler -> body', body)
   if (!body) {
     res.writeStatus('422').end()
     return
@@ -76,7 +66,6 @@ const webhookGraphQLHandler = uWSAsyncHandler(async (res: HttpResponse, req: Htt
   const {query, variables} = (body as any) as IntranetPayload
 
   const result = await publishWebhookGQL(query, variables)
-  console.log('webhookGraphQLHandler -> result', result)
   res.cork(() => {
     res.writeHeader('content-type', 'application/json').end(JSON.stringify(result))
   })

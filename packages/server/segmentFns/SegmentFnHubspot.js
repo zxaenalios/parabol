@@ -218,7 +218,6 @@ const parabolFetch = async (query, variables, payload, settings) => {
       variables
     })
   })
-  console.log('parabolFetch -> res', res)
   if (!String(res.status).startsWith('2')) {
     console.log({query, variables: JSON.stringify(variables)})
     throw new Error(`ParabolFetch: ${res.status}`)
