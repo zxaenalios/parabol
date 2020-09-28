@@ -82,7 +82,7 @@ jobs:
           name: Alert Failed Tests
           command: |
             if [ "${CIRCLE_BRANCH}" == "master_circeci" ]; then
-              curl --ssl -X POST -H 'Content-type: application/json' --data '{"text":"`master` branch CI Cypress Tests failed! Please investigate."}' $SLACK_T_PRODUCT_URL
+              curl --ssl -X POST -H 'Content-type: application/json' --data '{"text":"`master` branch CI Cypress Tests failed! Please investigate."}' $SLACK_DEVOPS_URL
             fi
           when: on_fail
       - deploy:
