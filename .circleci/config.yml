@@ -138,9 +138,13 @@ jobs:
           path: ~/action/dist
           destination: dist
       - store_artifacts:
+          name: Upload Cypress Videos
           path: ~/action/packages/cypress/videos
+          destination: cypress/videos 
       - store_artifacts:
-          path: ~/action/pacakges/cypress/screenshots
+          name: Upload Cypress Screenshots
+          path: ~/action/packages/cypress/screenshots
+          destination: cypress/screenshots
       - run:
           name: Upload sentry artifacts
           command: |
