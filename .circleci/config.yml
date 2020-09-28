@@ -78,6 +78,8 @@ jobs:
               yarn postdeploy
               yarn test
             fi
+      - store_test_results:
+          path: ~/action/packages/cypress/results
       - run:
           name: Alert Failed Tests
           command: |
@@ -135,6 +137,10 @@ jobs:
       - store_artifacts:
           path: ~/action/dist
           destination: dist
+      - store_artifacts:
+          path: ~/action/packages/cypress/videos
+      - store_artifacts:
+          path: ~/action/pacakges/cypress/screenshots
       - run:
           name: Upload sentry artifacts
           command: |
@@ -146,8 +152,6 @@ jobs:
               sentry-cli releases files "$ACTION_VERSION" upload-sourcemaps ~/action/dist
               sentry-cli releases finalize "$ACTION_VERSION"
             fi
-      - store_test_results:
-          path: ~/action/packages/cypress
 workflows:
   version: 2
   build-and-deploy:
