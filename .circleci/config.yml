@@ -58,10 +58,14 @@ jobs:
               cp $DEVOPS_WORKDIR/environments/$CIRCLE_BRANCH .env
               yarn build --deploy
             fi
+            if [ "${CIRCLE_BRANCH}" == "master_circeci" ]; then
+              cp $DEVOPS_WORKDIR/environments/development .env
+              yarn build --deploy
+            fi
       - run:
           name: Cypress Tests
           command: |
-            if [ "${CIRCLE_BRANCH}" == "production" ] || [ "${CIRCLE_BRANCH}" == "staging" ]; then
+            if [ "${CIRCLE_BRANCH}" == "production" ] || [ "${CIRCLE_BRANCH}" == "staging" ] || [ "${CIRCLE_BRANCH}" == "master_circeci" ]; then
               cp $DEVOPS_WORKDIR/environments/cypress .env
               # cypress docker image has a bug, sideloading these mitigates it
               sudo apt-get update && sudo apt-get install xvfb libgtk2.0-0 libnotify-dev libgconf-2-4 libnss3 libxss1 libasound2
@@ -74,6 +78,13 @@ jobs:
               yarn postdeploy
               yarn test
             fi
+      - run:
+          name: Alert Failed Tests
+          command: |
+          if [ "${CIRCLE_BRANCH}" == "master_circeci" ]; then
+            curl --ssl -X POST -H 'Content-type: application/json' --data '{"text":"`master` branch CI Cypress Tests failed! Please investigate."}' $SLACK_T_PRODUCT_URL
+          fi
+          when: on_fail
       - deploy:
           name: Commit Deployment
           command: |
@@ -136,7 +147,7 @@ jobs:
               sentry-cli releases finalize "$ACTION_VERSION"
             fi
       - store_test_results:
-          path: ~/action/test-report
+          path: ~/action/packages/cypress
 workflows:
   version: 2
   build-and-deploy:
