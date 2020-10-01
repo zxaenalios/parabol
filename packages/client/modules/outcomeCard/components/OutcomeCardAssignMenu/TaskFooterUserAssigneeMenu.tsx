@@ -28,7 +28,6 @@ const TaskFooterUserAssigneeMenu = (props: Props) => {
   const {teamMembers}: any = team || {teamMembers: []}
   const atmosphere = useAtmosphere()
   if (!team) return null
-
   const assignees = useMemo(
     () => teamMembers.filter((teamMember) => teamMember.userId !== userId),
     [userId, teamMembers]
