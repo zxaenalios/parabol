@@ -35,11 +35,22 @@ const handleParsedMessage = async (
 }
 
 const PONG = 65
+const ACK_PREFIX = 1
 const isPong = (message) => message.byteLength === 1 && Buffer.from(message)[0] === PONG
+const isAck = (message) => message.byteLength === 10 && Buffer.from(message)[0] === ACK_PREFIX
+
 const handleMessage = (websocket: WebSocket, message: ArrayBuffer) => {
   const {connectionContext} = websocket
   if (isPong(message)) {
     keepAlive(connectionContext)
+    return
+  }
+  if (isAck(message)) {
+    const ackId = getAckId(message)
+    const cachedMessage = connectionContext.reliableQueue[ackId]
+    const {timeoutId} = cachedMessage
+    clearTimeout(timeoutId)
+    delete connectionContext.reliableQueue[ackId]
     return
   }
   let parsedMessage
@@ -67,3 +78,9 @@ const safeHandleMessage = (websocket: WebSocket, message: ArrayBuffer) => {
   }
 }
 export default safeHandleMessage
+
+
+0: title = 'Hi'
+1: title = "Bye"
+Bye
+Hi
