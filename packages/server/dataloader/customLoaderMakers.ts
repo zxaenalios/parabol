@@ -12,10 +12,14 @@ import {ThreadSource, ThreadSourceEnum} from '../database/types/ThreadSource'
 import getGitHubAuthByUserIdTeamId, {
   GetGitHubAuthByUserIdTeamIdResult
 } from '../postgres/queries/getGitHubAuthByUserIdTeamId'
+import {
+  getUsersByIdQuery,
+  IGetUsersByIdQueryResult
+} from '../postgres/queries/generated/getUsersByIdQuery'
+import getPg from '../postgres/getPg'
 import AtlassianServerManager from '../utils/AtlassianServerManager'
 import sendToSentry from '../utils/sendToSentry'
 import normalizeRethinkDbResults from './normalizeRethinkDbResults'
-import ProxiedCache from './ProxiedCache'
 import RethinkDataLoader from './RethinkDataLoader'
 
 type TeamUserKey = {teamId: string; userId: string}
@@ -77,9 +81,21 @@ const threadableLoaders = [
 
 // TODO: refactor if the interface pattern is used a total of 3 times
 
-export const users = () => {
-  return new ProxiedCache('User')
-}
+// export const users = () => {
+//   return new ProxiedCache('User')
+// }
+
+export const users = (parent: RethinkDataLoader) =>
+  new DataLoader<string, IGetUsersByIdQueryResult, string>(
+    async (userIds) => {
+      const users = await getUsersByIdQuery.run({ids: userIds as string[]}, getPg())
+      // TODO: omit rethink in normalize fn name
+      return normalizeRethinkDbResults(userIds, users)
+    },
+    {
+      ...parent.dataLoaderOptions
+    }
+  )
 
 export const serializeUserTasksKey = (key: UserTasksKey) => {
   const {userIds, teamIds, first, after, archived, statusFilters, filterQuery} = key
