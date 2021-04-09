@@ -12,11 +12,7 @@ import {ThreadSource, ThreadSourceEnum} from '../database/types/ThreadSource'
 import getGitHubAuthByUserIdTeamId, {
   GetGitHubAuthByUserIdTeamIdResult
 } from '../postgres/queries/getGitHubAuthByUserIdTeamId'
-import {
-  getUsersByIdQuery,
-  IGetUsersByIdQueryResult
-} from '../postgres/queries/generated/getUsersByIdQuery'
-import getPg from '../postgres/getPg'
+import getUsersById, {IGetUsersByIdResult} from '../postgres/queries/getUsersById'
 import AtlassianServerManager from '../utils/AtlassianServerManager'
 import sendToSentry from '../utils/sendToSentry'
 import normalizeRethinkDbResults from './normalizeRethinkDbResults'
@@ -86,9 +82,9 @@ const threadableLoaders = [
 // }
 
 export const users = (parent: RethinkDataLoader) =>
-  new DataLoader<string, IGetUsersByIdQueryResult, string>(
+  new DataLoader<string, IGetUsersByIdResult, string>(
     async (userIds) => {
-      const users = await getUsersByIdQuery.run({ids: userIds as string[]}, getPg())
+      const users = await getUsersById(userIds as string[])
       // TODO: omit rethink in normalize fn name
       return normalizeRethinkDbResults(userIds, users)
     },
