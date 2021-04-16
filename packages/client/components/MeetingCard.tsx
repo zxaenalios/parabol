@@ -16,7 +16,7 @@ import {phaseLabelLookup} from '../utils/meetings/lookups'
 import {MeetingCard_meeting} from '../__generated__/MeetingCard_meeting.graphql'
 import {TransitionStatus} from '../hooks/useTransition'
 
-const CardWrapper = styled('div')<{maybeTabletPlus: boolean}>(({maybeTabletPlus}) => ({
+const CardWrapper = styled('div')<{maybeTabletPlus: boolean, status?: TransitionStatus}>(({maybeTabletPlus, status}) => ({
   background: Card.BACKGROUND_COLOR,
   borderRadius: Card.BORDER_RADIUS,
   boxShadow: Elevation.CARD_SHADOW,
@@ -24,7 +24,9 @@ const CardWrapper = styled('div')<{maybeTabletPlus: boolean}>(({maybeTabletPlus}
   flexShrink: 0,
   maxWidth: '100%',
   margin: maybeTabletPlus ? '0 16px 16px 0' : '0 0 16px',
-  transition: `box-shadow 100ms ${BezierCurve.DECELERATE}`,
+  opacity: (status === TransitionStatus.EXITING || status === TransitionStatus.MOUNTED) ? 0 : 1,
+  transform: (status === TransitionStatus.EXITING || status === TransitionStatus.MOUNTED) ? 'scale(0)' : 'scale(1)',
+  transition: `all 100ms ${BezierCurve.DECELERATE}`,
   width: maybeTabletPlus ? 320 : '100%',
   ':hover': {
     boxShadow: Elevation.CARD_SHADOW_HOVER
@@ -69,6 +71,8 @@ const MeetingImg = styled('img')({
   width: '100%'
 })
 
+// isInitialRender: boolean
+
 interface Props {
   meeting: MeetingCard_meeting
   onTransitionEnd?: () => void
@@ -88,7 +92,7 @@ const MEETING_TYPE_LABEL = {
 }
 
 const MeetingCard = (props: Props) => {
-  const {meeting} = props
+  const {meeting, onTransitionEnd, status} = props
   const {history} = useRouter()
   const {name, team, id: meetingId, meetingType, phases} = meeting
   if (!team) {
@@ -109,7 +113,7 @@ const MeetingCard = (props: Props) => {
   const maybeTabletPlus = useBreakpoint(Breakpoint.FUZZY_TABLET)
 
   return (
-    <CardWrapper maybeTabletPlus={maybeTabletPlus} onClick={gotoMeeting}>
+    <CardWrapper onTransitionEnd={onTransitionEnd} status={status} maybeTabletPlus={maybeTabletPlus} onClick={gotoMeeting}>
       <MeetingImgWrapper>
         <MeetingTypeLabel>{MEETING_TYPE_LABEL[meetingType]}</MeetingTypeLabel>
         <MeetingImg src={ILLUSTRATIONS[meetingType]} />

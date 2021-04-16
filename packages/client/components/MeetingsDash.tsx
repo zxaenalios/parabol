@@ -12,6 +12,9 @@ import makeMinWidthMediaQuery from '../utils/makeMinWidthMediaQuery'
 import MeetingCard from './MeetingCard'
 import MeetingsDashEmpty from './MeetingsDashEmpty'
 import useTransition from '../hooks/useTransition'
+// import useTransition, {TransitionStatus} from '../hooks/useTransition'
+// import useInitialRender from '~/hooks/useInitialRender'
+// import useIsInitializing from '~/hooks/useIsInitializing'
 interface Props {
   viewer: MeetingsDash_viewer | null
 }
@@ -66,10 +69,14 @@ const MeetingsDash = (props: Props) => {
   const {viewer} = props
   const teams = viewer?.teams ?? []
   const activeMeetings = teams.flatMap((team) => team.activeMeetings)
+  // useTransition wants a key so here ya go
+  const meetings = activeMeetings.map((meeting) => ({key: meeting.id, ...meeting}))
   const hasMeetings = activeMeetings.length > 0
-  const transitionMeetings = useTransition(activeMeetings)
+  const transitionMeetings = useTransition(meetings)
   const maybeTabletPlus = useBreakpoint(Breakpoint.FUZZY_TABLET)
   const maybeBigDisplay = useBreakpoint(1900)
+  // const isInitialRender = useIsInitializing()
+  // const isInit = useInitialRender()
   useDocumentTitle('Meetings | Parabol', 'Meetings')
   if (!viewer) return null
   return (
@@ -81,16 +88,16 @@ const MeetingsDash = (props: Props) => {
           ))}
         </InnerContainer>
       ) : (
-          <EmptyContainer>
-            <MeetingsDashEmpty />
-            {maybeBigDisplay ? (
-              <>
-                <Squiggle src={blueSquiggle} />
-                <Flash src={yellowFlashLine} />
-              </>
-            ) : null}
-          </EmptyContainer>
-        )}
+        <EmptyContainer>
+          <MeetingsDashEmpty />
+          {maybeBigDisplay ? (
+            <>
+              <Squiggle src={blueSquiggle} />
+              <Flash src={yellowFlashLine} />
+            </>
+          ) : null}
+        </EmptyContainer>
+      )}
     </Wrapper>
   )
 }
@@ -98,6 +105,7 @@ const MeetingsDash = (props: Props) => {
 graphql`
   fragment MeetingsDashActiveMeetings on Team {
     activeMeetings {
+      id
       ...MeetingCard_meeting
       ...useSnacksForNewMeetings_meetings
     }
