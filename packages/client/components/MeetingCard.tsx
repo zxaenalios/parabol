@@ -14,6 +14,7 @@ import {BezierCurve, Breakpoint, Card} from '../types/constEnums'
 import getMeetingPhase from '../utils/getMeetingPhase'
 import {phaseLabelLookup} from '../utils/meetings/lookups'
 import {MeetingCard_meeting} from '../__generated__/MeetingCard_meeting.graphql'
+import {TransitionStatus} from '../hooks/useTransition'
 
 const CardWrapper = styled('div')<{maybeTabletPlus: boolean}>(({maybeTabletPlus}) => ({
   background: Card.BACKGROUND_COLOR,
@@ -70,6 +71,8 @@ const MeetingImg = styled('img')({
 
 interface Props {
   meeting: MeetingCard_meeting
+  onTransitionEnd?: () => void
+  status?: TransitionStatus
 }
 
 const ILLUSTRATIONS = {

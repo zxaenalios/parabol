@@ -11,6 +11,7 @@ import {Breakpoint, Layout, NavSidebar, RightSidebar} from '../types/constEnums'
 import makeMinWidthMediaQuery from '../utils/makeMinWidthMediaQuery'
 import MeetingCard from './MeetingCard'
 import MeetingsDashEmpty from './MeetingsDashEmpty'
+import useTransition from '../hooks/useTransition'
 interface Props {
   viewer: MeetingsDash_viewer | null
 }
@@ -66,6 +67,7 @@ const MeetingsDash = (props: Props) => {
   const teams = viewer?.teams ?? []
   const activeMeetings = teams.flatMap((team) => team.activeMeetings)
   const hasMeetings = activeMeetings.length > 0
+  const transitionMeetings = useTransition(activeMeetings)
   const maybeTabletPlus = useBreakpoint(Breakpoint.FUZZY_TABLET)
   const maybeBigDisplay = useBreakpoint(1900)
   useDocumentTitle('Meetings | Parabol', 'Meetings')
@@ -74,21 +76,21 @@ const MeetingsDash = (props: Props) => {
     <Wrapper>
       {hasMeetings ? (
         <InnerContainer maybeTabletPlus={maybeTabletPlus}>
-          {activeMeetings.map((meeting, idx) => (
-            <MeetingCard key={idx} meeting={meeting} />
+          {transitionMeetings.map(({onTransitionEnd, child, status}, idx) => (
+            <MeetingCard key={idx} meeting={child} status={status} onTransitionEnd={onTransitionEnd} />
           ))}
         </InnerContainer>
       ) : (
-        <EmptyContainer>
-          <MeetingsDashEmpty />
-          {maybeBigDisplay ? (
-            <>
-              <Squiggle src={blueSquiggle} />
-              <Flash src={yellowFlashLine} />
-            </>
-          ) : null}
-        </EmptyContainer>
-      )}
+          <EmptyContainer>
+            <MeetingsDashEmpty />
+            {maybeBigDisplay ? (
+              <>
+                <Squiggle src={blueSquiggle} />
+                <Flash src={yellowFlashLine} />
+              </>
+            ) : null}
+          </EmptyContainer>
+        )}
     </Wrapper>
   )
 }
