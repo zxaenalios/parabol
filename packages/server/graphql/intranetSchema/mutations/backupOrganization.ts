@@ -234,6 +234,7 @@ const backupOrganization = {
       userIds: r
         .table('TeamMember')
         .getAll(r.args(teamIds), {index: 'teamId'})('userId')
+        .distinct()
         .coerceTo('array')
         .do((userIds) => {
           return r({
