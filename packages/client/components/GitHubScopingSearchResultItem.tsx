@@ -50,6 +50,7 @@ interface Props {
 const GitHubScopingSearchResultItem = (props: Props) => {
   const {issue, meetingId, persistQuery, usedServiceTaskIds} = props
   const {id: serviceTaskId, repository, title} = issue
+  // TODO why GH be like this?
   const url = issue.url as string
   const {nameWithOwner} = repository
   const isSelected = usedServiceTaskIds.has(serviceTaskId)

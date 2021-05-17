@@ -117,6 +117,31 @@ export default class StripeManager {
     })
   }
 
+  // won't work until you upgrade the stripe package to v8.x
+  // async retrieveUpcomingInvoiceLineItems(stripeId: string, stripeSubscriptionId: string) {
+  //   let fullRes: Stripe.Response<Stripe.ApiList<Stripe.InvoiceLineItem>> = null as any
+  //   const getPage = async (startingAfter?: string) => {
+  //     const res = await this.stripe.invoices.listUpcomingLineItems({
+  //       customer: stripeId,
+  //       subscription: stripeSubscriptionId,
+  //       limit: 100,
+  //       starting_after: startingAfter
+  //     })
+  //     if (!startingAfter) {
+  //       fullRes = res
+  //     } else {
+  //       fullRes.data.push(...res.data)
+  //     }
+  //     if (res.has_more) {
+  //       const lastItem = res.data[res.data.length - 1]
+  //       const {id} = lastItem
+  //       await getPage(id)
+  //     }
+  //   }
+  //   await getPage()
+  //   return fullRes
+  // }
+
   async updateAccountBalance(customerId: string, newBalance: number) {
     return this.stripe.customers.update(customerId, {account_balance: newBalance})
   }
