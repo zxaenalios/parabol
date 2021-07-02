@@ -7,12 +7,12 @@ import useBreakpoint from '~/hooks/useBreakpoint'
 import useCallbackRef from '~/hooks/useCallbackRef'
 import {RetroDiscussPhase_meeting} from '~/__generated__/RetroDiscussPhase_meeting.graphql'
 import EditorHelpModalContainer from '../containers/EditorHelpModalContainer/EditorHelpModalContainer'
-import useScreenBugs from '../hooks/useScreenBugs'
 import {PALETTE} from '../styles/paletteV3'
 import {ICON_SIZE} from '../styles/typographyV2'
 import {Breakpoint} from '../types/constEnums'
 import {phaseLabelLookup} from '../utils/meetings/lookups'
 import plural from '../utils/plural'
+import {DiscussionThreadables} from './DiscussionThreadList'
 import DiscussionThreadRoot from './DiscussionThreadRoot'
 import DiscussPhaseReflectionGrid from './DiscussPhaseReflectionGrid'
 import DiscussPhaseSqueeze from './DiscussPhaseSqueeze'
@@ -133,18 +133,25 @@ const ColumnInner = styled('div')<{isDesktop: boolean}>(({isDesktop}) => ({
   width: '100%'
 }))
 
+const allowedThreadables: DiscussionThreadables[] = ['comment', 'task']
 const RetroDiscussPhase = (props: Props) => {
   const {avatarGroup, toggleSidebar, meeting} = props
   const [callbackRef, phaseRef] = useCallbackRef()
-  const {id: meetingId, endedAt, localStage, showSidebar, organization} = meeting
-  const {reflectionGroup, isComplete} = localStage
+  const {endedAt, localStage, showSidebar, organization} = meeting
+  const {reflectionGroup, discussionId} = localStage
   const isDesktop = useBreakpoint(Breakpoint.SINGLE_REFLECTION_COLUMN)
   const title = reflectionGroup?.title ?? ''
-  const isBuggy = (!isComplete && title?.toLowerCase().includes('bug')) ?? false
-  useScreenBugs(isBuggy, meetingId)
+
+  // Uncomment below code to enable Easter Egg:
+  // bugs shown on screen when the discussion group title contains "bug"
+  //
+  // const {isComplete} = localStage
+  // const isBuggy = (!isComplete && title?.toLowerCase().includes('bug')) ?? false
+  // useScreenBugs(isBuggy, meetingId)
+
   // reflection group will be null until the server overwrites the placeholder.
   if (!reflectionGroup) return null
-  const {id: reflectionGroupId, voteCount} = reflectionGroup
+  const {voteCount} = reflectionGroup
 
   const reflections = reflectionGroup.reflections ?? []
   if (!reflectionGroup.reflections) {
@@ -201,9 +208,10 @@ const RetroDiscussPhase = (props: Props) => {
               </ReflectionColumn>
               <ThreadColumn isDesktop={isDesktop}>
                 <DiscussionThreadRoot
+                  allowedThreadables={allowedThreadables}
+                  isReadOnly={!!endedAt}
                   meetingContentRef={phaseRef}
-                  meetingId={meetingId}
-                  threadSourceId={reflectionGroupId!}
+                  discussionId={discussionId!}
                 />
               </ThreadColumn>
             </ColumnsContainer>
@@ -219,13 +227,10 @@ graphql`
   fragment RetroDiscussPhase_stage on NewMeetingStage {
     ... on RetroDiscussStage {
       isComplete
+      discussionId
       reflectionGroup {
         ...ReflectionGroup_reflectionGroup
         id
-        commentors {
-          userId
-          preferredName
-        }
         title
         voteCount
         reflections {
@@ -244,7 +249,6 @@ export default createFragmentContainer(RetroDiscussPhase, {
       ...StageTimerControl_meeting
       ...ReflectionGroup_meeting
       ...StageTimerDisplay_meeting
-      id
       endedAt
       organization {
         ...DiscussPhaseSqueeze_organization

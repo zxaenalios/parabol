@@ -23,7 +23,6 @@ const Nav = styled('nav')<{isOpen: boolean}>(({isOpen}) => ({
   [makeMinWidthMediaQuery(Breakpoint.DASH_BREAKPOINT_WIDEST)]: {
     bottom: 0,
     left: 0,
-    position: 'fixed',
     top: AppBar.HEIGHT,
     zIndex: 2
   }
@@ -64,6 +63,7 @@ const DashSidebar = (props: Props) => {
     <Nav isOpen={isOpen}>
       <Contents>
         <NavItemsWrap>
+          <NavItem icon={'forum'} href={'/meetings'} label={'Meetings'} />
           <NavItem icon={'timeline'} href={'/me'} label={'Timeline'} />
           <NavItem icon={'playlist_add_check'} href={'/me/tasks'} label={'Tasks'} />
         </NavItemsWrap>

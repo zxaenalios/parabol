@@ -31,7 +31,9 @@ export const enum Breakpoint {
   SINGLE_REFLECTION_COLUMN = 704, // (ReflectionWith + 16) * 2,
   DASH_BREAKPOINT_WIDEST = 1816, // (4*296) + (5*24) + (256*2) = 4 card cols, 4 col gutters, 2 sidebars
   WIDER_SCREEN = 1600,
-  VOTE_PHASE = 800
+  VOTE_PHASE = 800,
+  FUZZY_TABLET = 700,
+  BIG_DISPLAY = 1900
 }
 
 export const enum Card {
@@ -89,12 +91,19 @@ export const enum ElementWidth {
   REFLECTION_CARD = 296,
   REFLECTION_CARD_PADDED = 296,
   REFLECTION_CARD_PADDING = 6,
-  REFLECTION_COLUMN = 320
+  REFLECTION_COLUMN = 320,
+  NEW_MEETING_FAB = 128,
+  MEETING_CARD = 320,
+  MEETING_CARD_MARGIN = 16,
+  MEETING_CARD_LARGE_MARGIN = 40,
+  MEETING_CARD_WITH_MARGIN = 336
 }
 
 export const enum ElementHeight {
   REFLECTION_CARD = 44,
-  REFLECTION_CARD_MAX = 104 // 4 lines (20px each) + (2 * 12px) vertical gutter
+  REFLECTION_CARD_MAX = 104, // 4 lines (20px each) + (2 * 12px) vertical gutter
+  MEETING_CARD_MARGIN = 16,
+  MEETING_CARD_WITH_MARGIN = 272
 }
 
 export const enum ExternalLinks {
@@ -153,15 +162,19 @@ export const enum LocalStorageKey {
   APP_TOKEN_KEY = 'Action:token',
   INVITATION_TOKEN = 'invitationToken',
   GRAPHIQL_SCHEMA = 'gqlSchema',
-  EMAIL = 'email'
+  EMAIL = 'email',
+  ERROR_PRONE_AT = 'errorProneAt'
 }
 
 export const enum AuthenticationError {
+  FAILED_TO_SEND = 'failedToSend',
   MISSING_HASH = 'missingHash',
   INVALID_PASSWORD = 'invalidPassword',
   IDENTITY_NOT_FOUND = 'identityNotFound',
+  EXCEEDED_RESET_THRESHOLD = 'exceededResetThreshold',
   USER_NOT_FOUND = 'userNotFound',
-  USER_EXISTS_GOOGLE = 'userExistsGoogle'
+  USER_EXISTS_GOOGLE = 'userExistsGoogle',
+  USER_EXISTS_SAML = 'userExistsSaml'
 }
 
 export const enum MathEnum {
@@ -232,6 +245,7 @@ export const enum Providers {
   ATLASSIAN_DESC = 'Create Jira issues from Parabol',
   GITHUB_NAME = 'GitHub',
   GITHUB_DESC = 'Create issues from Parabol',
+  GITHUB_SCOPE = 'admin:org_hook,read:org,repo,user,write:repo_hook',
   SLACK_NAME = 'Slack',
   SLACK_DESC = 'Push notifications to Slack'
 }
@@ -335,6 +349,7 @@ export const enum Threshold {
   MAX_POKER_TEAM_TEMPLATES = 20,
   MAX_REACTJIS = 12,
   MAX_POKER_STORIES = 50,
+  MAX_INTEGRATION_FETCH_TIME = 10000,
   REFRESH_JWT_AFTER = 1296000000, // 15 days
   RESET_PASSWORD_LIFESPAN = 86400000, // 1 day
   VERIFY_TOKEN_LIFESPAN = 2592000000, // 30 days
@@ -390,5 +405,6 @@ export const enum SprintPokerDefaults {
   JIRA_FIELD_COMMENT = '__comment',
   JIRA_FIELD_COMMENT_LABEL = 'As Comment',
   JIRA_FIELD_NULL = '',
-  JIRA_FIELD_NULL_LABEL = 'Do Not Update'
+  JIRA_FIELD_NULL_LABEL = 'Do Not Update',
+  GITHUB_DEFAULT_QUERY = 'is:issue is:open sort:updated involves:@me'
 }

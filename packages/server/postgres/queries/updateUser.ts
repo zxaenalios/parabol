@@ -2,17 +2,18 @@ import {updateUserQuery, IUpdateUserQueryParams} from './generated/updateUserQue
 import getPg from '../getPg'
 import catchAndLog from '../utils/catchAndLog'
 import AuthIdentity from '../../database/types/AuthIdentity'
+import {OptionalExceptFor} from '../../utils/TypeUtil'
 
 interface UpdateUserQueryParams extends Omit<IUpdateUserQueryParams, 'identities'> {
   identities: AuthIdentity[]
 }
 
 const updateUser = async (
-  update: Partial<UpdateUserQueryParams>,
+  update: OptionalExceptFor<UpdateUserQueryParams, 'updatedAt'>,
   userIds: string | string[]
-): Promise<void> => {
+) => {
   userIds = typeof userIds === 'string' ? [userIds] : userIds
-  await catchAndLog(() =>
+  return await catchAndLog(() =>
     updateUserQuery.run(
       {
         ...update,

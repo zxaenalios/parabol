@@ -7,8 +7,9 @@ import segmentIo from '../../utils/segmentIo'
 import {GQLContext} from '../graphql'
 import DeleteUserPayload from '../types/DeleteUserPayload'
 import removeFromOrg from './helpers/removeFromOrg'
-import getDeletedEmail from '../../utils/getDeletedEmail'
 import updateUser from '../../postgres/queries/updateUser'
+import {USER_REASON_REMOVED_LIMIT} from '../../postgres/constants'
+import removeSlackAuths from './helpers/removeSlackAuths'
 
 export default {
   type: GraphQLNonNull(DeleteUserPayload),
@@ -57,13 +58,14 @@ export default {
     } else if (!user) {
       return {error: {message: 'User not found'}}
     }
-    const {id: userIdToDelete} = user
+    const {id: userIdToDelete, tms} = user
+    removeSlackAuths(userIdToDelete, tms, true)
     const orgUsers = await dataLoader.get('organizationUsersByUserId').load(userIdToDelete)
     const orgIds = orgUsers.map((orgUser) => orgUser.orgId)
     await Promise.all(
       orgIds.map((orgId) => removeFromOrg(userIdToDelete, orgId, undefined, dataLoader))
     )
-    const validReason = reason?.trim().slice(0, 2000) || 'No reason provided'
+    const validReason = reason?.trim().slice(0, USER_REASON_REMOVED_LIMIT) || 'No reason provided'
     if (userId) {
       segmentIo.track({
         userId,
@@ -74,20 +76,15 @@ export default {
       })
     }
     // do this after 30 seconds so any segment API calls can still get the email
+    const update = {
+      isRemoved: true,
+      email: 'DELETED',
+      reasonRemoved: validReason,
+      updatedAt: new Date()
+    }
     setTimeout(() => {
-      db.write('User', userIdToDelete, {
-        isRemoved: true,
-        email: 'DELETED',
-        reasonRemoved: validReason
-      })
-      updateUser(
-        {
-          isRemoved: true,
-          email: getDeletedEmail(userId),
-          reasonRemoved: validReason
-        },
-        userIdToDelete
-      )
+      db.write('User', userIdToDelete, update)
+      updateUser(update, userIdToDelete)
     }, 30000)
     return {}
   }

@@ -26,6 +26,7 @@ export interface IGetTeamsByIdQueryResult {
   orgId: string
   isOnboardTeam: boolean
   updatedAt: Date
+  lockMessageHTML: string | null
 }
 
 /** 'GetTeamsByIdQuery' query type */

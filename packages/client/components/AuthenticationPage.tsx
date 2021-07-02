@@ -19,17 +19,18 @@ const AuthenticationPage = (props: Props) => {
   useDocumentTitle('Sign Up for Free Online Retrospectives | Parabol', 'Sign Up')
   useCanonical(page)
   if (authObj) {
-    const nextUrl = getValidRedirectParam() || '/me'
+    const nextUrl = getValidRedirectParam() || '/meetings'
     // always replace otherwise they could get stuck in a back-button loop
     setTimeout(() => history.replace(nextUrl))
     return null
   }
-  const gotoPage: GotoAuthPage = (page, search?) => {
-    history.push(`/${page}${search}`)
+  const goToPage: GotoAuthPage = (page, search?) => {
+    const url = search ? `/${page}${search}` : `/${page}`
+    history.push(url)
   }
   return (
     <TeamInvitationWrapper>
-      <GenericAuthentication page={page} gotoPage={gotoPage} />
+      <GenericAuthentication page={page} goToPage={goToPage} />
     </TeamInvitationWrapper>
   )
 }

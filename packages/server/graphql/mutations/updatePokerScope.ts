@@ -1,11 +1,12 @@
 import {GraphQLID, GraphQLList, GraphQLNonNull} from 'graphql'
 import {SubscriptionChannel, Threshold} from 'parabol-client/types/constEnums'
 import JiraServiceTaskId from '../../../client/shared/gqlIds/JiraServiceTaskId'
+import getPhase from '../../utils/getPhase'
 import getRethink from '../../database/rethinkDriver'
-import EstimatePhase from '../../database/types/EstimatePhase'
 import EstimateStage from '../../database/types/EstimateStage'
 import MeetingPoker from '../../database/types/MeetingPoker'
 import getTemplateRefById from '../../postgres/queries/getTemplateRefById'
+import insertDiscussions, {InputDiscussions} from '../../postgres/queries/insertDiscussions'
 import {getUserId, isTeamMember} from '../../utils/authorization'
 import ensureJiraDimensionField from '../../utils/ensureJiraDimensionField'
 import getRedis from '../../utils/getRedis'
@@ -14,6 +15,19 @@ import RedisLock from '../../utils/RedisLock'
 import {GQLContext} from '../graphql'
 import UpdatePokerScopeItemInput from '../types/UpdatePokerScopeItemInput'
 import UpdatePokerScopePayload from '../types/UpdatePokerScopePayload'
+import getNextFacilitatorStageAfterStageRemoved from './helpers/getNextFacilitatorStageAfterStageRemoved'
+
+interface TUpdatePokerScopeItemInput {
+  service: 'github' | 'PARABOL' | 'jira'
+  serviceTaskId: string
+  action: 'ADD' | 'DELETE'
+}
+
+const taskServiceToDiscussionTopicType = {
+  github: 'githubIssue',
+  jira: 'jiraIssue',
+  PARABOL: 'task'
+} as const
 
 const updatePokerScope = {
   type: GraphQLNonNull(UpdatePokerScopePayload),
@@ -30,7 +44,7 @@ const updatePokerScope = {
   },
   resolve: async (
     _source,
-    {meetingId, updates},
+    {meetingId, updates}: {meetingId: string; updates: TUpdatePokerScopeItemInput[]},
     {authToken, dataLoader, socketId: mutatorId}: GQLContext
   ) => {
     const r = await getRethink()
@@ -38,6 +52,7 @@ const updatePokerScope = {
     const viewerId = getUserId(authToken)
     const operationId = dataLoader.share()
     const subOptions = {mutatorId, operationId}
+    const now = new Date()
 
     //AUTH
     const meeting = (await dataLoader.get('newMeetings').load(meetingId)) as MeetingPoker
@@ -45,7 +60,7 @@ const updatePokerScope = {
       return {error: {message: `Meeting not found`}}
     }
 
-    const {endedAt, teamId, phases, meetingType, templateRefId} = meeting
+    const {endedAt, teamId, phases, meetingType, templateRefId, facilitatorStageId} = meeting
     if (endedAt) {
       return {error: {message: `Meeting already ended`}}
     }
@@ -68,11 +83,12 @@ const updatePokerScope = {
       issueKey: string
       dimensionName: string
     }[]
-    const estimatePhase = phases.find((phase) => phase.phaseType === 'ESTIMATE') as EstimatePhase
+    const estimatePhase = getPhase(phases, 'ESTIMATE')
     let stages = estimatePhase.stages
     const templateRef = await getTemplateRefById(templateRefId)
 
     const {dimensions} = templateRef
+    const newDiscussions = [] as InputDiscussions
     updates.forEach((update) => {
       const {service, serviceTaskId, action} = update
 
@@ -94,6 +110,14 @@ const updatePokerScope = {
             })
         )
         // MUTATIVE
+        const discussions = newStages.map((stage) => ({
+          id: stage.discussionId,
+          meetingId,
+          teamId,
+          discussionTopicId: serviceTaskId,
+          discussionTopicType: taskServiceToDiscussionTopicType[service]
+        }))
+        newDiscussions.push(...discussions)
         stages.push(...newStages)
         const {cloudId, issueKey, projectKey} = JiraServiceTaskId.split(serviceTaskId)
         const firstDimensionName = dimensions[0].name
@@ -117,6 +141,21 @@ const updatePokerScope = {
         }
       } else if (action === 'DELETE') {
         const stagesToRemove = stages.filter((stage) => stage.serviceTaskId === serviceTaskId)
+        const removingTatorStage = stagesToRemove.find((stage) => stage.id === facilitatorStageId)
+        if (removingTatorStage) {
+          const nextStage = getNextFacilitatorStageAfterStageRemoved(
+            facilitatorStageId,
+            removingTatorStage.id,
+            phases
+          )
+          for (const stage of stages) {
+            if (stage.id === nextStage.id) {
+              stage.startAt = now
+              break
+            }
+          }
+          meeting.facilitatorStageId = nextStage.id
+        }
         if (stagesToRemove.length > 0) {
           // MUTATIVE
           stages = stages.filter((stage) => stage.serviceTaskId !== serviceTaskId)
@@ -137,10 +176,14 @@ const updatePokerScope = {
       .table('NewMeeting')
       .get(meetingId)
       .update({
-        phases
+        facilitatorStageId: meeting.facilitatorStageId,
+        phases,
+        updatedAt: now
       })
       .run()
-
+    if (newDiscussions.length > 0) {
+      await insertDiscussions(newDiscussions)
+    }
     await redisLock.unlock()
     const data = {meetingId}
     publish(SubscriptionChannel.MEETING, meetingId, 'UpdatePokerScopeSuccess', data, subOptions)
